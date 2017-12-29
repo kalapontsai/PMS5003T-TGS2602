@@ -1,6 +1,5 @@
 # PMS5003T-TGS2602
 Pollution and Contaminants sensor with Arduino nano
 
-active component priority : PMS5003T , TGS2602 , LCD_2x16
-
-2018/12/28 : PMS5003T reading, LCD initial
+2017/12/29 : PMS5003T reading, 2x16 LCD initial
+TGS2602 is unavailable
