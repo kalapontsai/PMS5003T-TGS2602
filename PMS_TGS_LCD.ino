@@ -6,7 +6,7 @@
 SoftwareSerial mySerial(2, 3);//rx,tx
 /* PlanTower PMS5003T
 code ref from http://jaihung.blogspot.tw/search/label/pms5003t
-Device pin:
+pin list:
 1:VCC (+5v)
 2:GND
 3:High (+3.3v) or Open is normal mode(Default), Low:Sleep mode
@@ -33,6 +33,15 @@ long pm25PNO =0;
 long Temperature =0;
 long Humidity =0;
 char buf[50];
+/* FIGARO TGS2602
+pin list:
+1:Heater (+5v)
+2:Sense electrode (connect Analog pin and GND via 0.45k ohm min. )
+3:Sense electrode (+5V)
+4:Heater (GND or switch with Pin1)
+*/
+int gasSensor = 2;  // Analog pin A2
+int gasval = 0;
 
 const int debug_mode = 1;
 
@@ -73,9 +82,13 @@ void loop() {
     c = mySerial.read();
     c_all += c;
     if(count > 40){
-      Serial.println("complete");
-      Serial.println("all string :");
+      gasval = analogRead(gasSensor);
+      Serial.println("Gas");
+      Serial.print("VOCs = ");
+      Serial.println(gasval);
+      Serial.println("--- Raw strings ---");
       Serial.println(c_all);
+      Serial.println("--- Start ---");
       break;
       }
     if((count==0 && c!=0x42) || (count==1 && c!=0x4d)){
