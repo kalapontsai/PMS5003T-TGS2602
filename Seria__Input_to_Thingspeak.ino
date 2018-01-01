@@ -1,8 +1,8 @@
 #include <ESP8266WiFi.h>
 // replace with your channel’s thingspeak API key,
-String apiKey = "6IKUBPZBQXHCFRSV";
-const char* ssid = "elhomeo";
-const char* password = "39001678";
+String apiKey = "";
+const char* ssid = "";
+const char* password = "";
 const char* server = "api.thingspeak.com";
 WiFiClient client;
 String readString;
@@ -10,16 +10,18 @@ void sendata(String t,String h,String p25,String p100, String v){
   digitalWrite(5, LOW);
   if (client.connect(server,80)) { // "184.106.153.149" or api.thingspeak.com
   String postStr = apiKey;
-  postStr +="&field1=";
-  postStr += String(t);
+  //postStr +="&field1=";
+  //postStr += String(t);
   postStr +="&field2=";
   postStr += String(h);
-/*  postStr +="&field3=";
+  postStr +="&field3=";
   postStr += String(p25);
   postStr +="&field4=";
   postStr += String(p100);
   postStr +="&field5=";
-  postStr += String(v);*/
+  postStr += String(v);
+  postStr +="&field6=";
+  postStr += String(t);
   postStr += "\r\n\r\n";
   
   client.print("POST /update HTTP/1.1\n");
@@ -61,8 +63,6 @@ void setup() {
   Serial.println("");
   Serial.println("WiFi connected");
 }
-// TH023023123123123
-//6IKUBPZBQXHCFRSV&field1=123&field2=123&field3=234&field4=099&field5=099
 
 void loop() {
   digitalWrite(5, HIGH);
