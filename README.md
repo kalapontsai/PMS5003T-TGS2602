@@ -2,3 +2,5 @@
 Pollution and Contaminants sensor with Arduino nano
 
 2017/12/29 : include debug code, disable Eco mode pin
+
+2018/1/3 fix all problem and stable work without case. https://i.imgur.com/pgxefHl.jpg
