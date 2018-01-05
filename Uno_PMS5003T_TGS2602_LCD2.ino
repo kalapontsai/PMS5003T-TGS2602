@@ -7,6 +7,7 @@ int gasval = 0;
 int cycle = 0; // to switch LCD screen to show PM2.5 or VOCs
 
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // declare LCD I2C address
+#define LIGHTPIN 5; //use D5 for LCD backlight switch
 
 unsigned long now_time; // control upload data period to ThinkSpeak
 unsigned long o_time;
@@ -121,6 +122,7 @@ char CopeSerialData(unsigned char ucData){
 void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);
+  pinMode(LIGHTPIN,INPUT);
   lcd.begin(16, 2); // LCD initial，16 words x 2 column，backlight ON
   for(int i=0; i<3; i++) {  // shall be wait for 30 sec since internal fan power on
     lcd.setCursor(0,0);
@@ -135,6 +137,11 @@ void setup() {
 }
 void loop(){
   now_time = millis();
+  if (digitalRead(LIGHTPIN) == HIGH ) {
+    lcd.backlight();
+  } else {
+    lcd.nobacklight();
+  }
   while (mySerial.available()) {
     CopeSerialData(mySerial.read());
   }
