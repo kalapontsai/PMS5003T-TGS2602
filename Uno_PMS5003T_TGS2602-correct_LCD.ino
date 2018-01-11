@@ -2,20 +2,22 @@
 #include <SoftwareSerial.h>
 SoftwareSerial mySerial(2, 3);//rx,tx, receive PMS data and send ThinkSpeak data to wf8266r
 #include <LiquidCrystal_I2C.h>
-int gasSensor = 2;  // Analog pin A2
+int gasSensor = 0;  // Analog pin A0, r=10k
 int gasval = 0;
 int cycle = 0; // to switch LCD screen to show PM2.5 or VOCs
 
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // declare LCD I2C address
-#define LIGHTPIN 5; //use D5 for LCD backlight switch
+int LIGHTPIN = 5; //use D5 for LCD backlight switch
 
-unsigned long now_time; // control upload data period to ThinkSpeak
+unsigned long now_time; // control upload data timing to ThinkSpeak
 unsigned long o_time;
 
 float tempRHLow =0;
 float tempRHHigh =0;
 float gasCorrection =0;
 float rh65[] = {1.72,1.72,1.3,1.3,1,0.74,0.74,0.62,0.62}; //RH65%時的修正值
+
+int ESPLIGHTPIN = 7;
 
 float getGasCorrection (float tempValue) { // get the gas value and corrective it
   for (int i =0; i <10; i=i+1){
@@ -50,8 +52,12 @@ void espSend (int t,int h,int p25,int p100,int v){
     Serial.print("send data to ESP :");
     Serial.println(now_time - o_time);
     Serial.println(send_data);
-    lcd.setCursor(15,0);
-    lcd.print("X");
+  for(int i=0; i<9; i++) {  
+    digitalWrite(ESPLIGHTPIN, LOW);
+    delay(250);
+    digitalWrite(ESPLIGHTPIN, HIGH);
+    delay(250);
+  }
   }
 }
 
@@ -84,6 +90,10 @@ char CopeSerialData(unsigned char ucData){
     pmcount25=(float)ucRxBuffer[22]*256+(float)ucRxBuffer[23];  Serial.print("PMcount2.5:");Serial.println(pmcount25);
     temp=(float)ucRxBuffer[24]*256+(float)ucRxBuffer[25];       Serial.print("Temperature:");Serial.println(temp/10);
     humi=(float)ucRxBuffer[26]*256+(float)ucRxBuffer[27];       Serial.print("Humidity:");   Serial.println(humi/10);
+    if (((temp/10) > 50) || ((temp/10) < 1) ) {
+          ucRxCnt=0;
+    return ucRxCnt;
+    }
     //Serial.print("Version:");     Serial.println((float)ucRxBuffer[28]);
     //Serial.print("Error Code:");  Serial.println((float)ucRxBuffer[29]);
     //Serial.println("------------------------------------------------------");
@@ -125,7 +135,7 @@ char CopeSerialData(unsigned char ucData){
     Serial.print(" / ");
     Serial.println(o_time);
     Serial.println("------------------------------------------------------");
-    if ((now_time - o_time) > 300000) {
+    if ((now_time - o_time) > 1800000) {
       espSend(temp,humi,pmat25,pmat100,gasval);
       o_time = now_time;
     }
@@ -138,33 +148,38 @@ void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);
   pinMode(LIGHTPIN,INPUT);
+  pinMode(ESPLIGHTPIN,OUTPUT);
   lcd.begin(16, 2); // LCD initial，16 words x 2 column，backlight ON
   for(int i=0; i<3; i++) {  // shall be wait for 30 sec since internal fan power on
     lcd.setCursor(0,0);
     lcd.print("Humi & Temp");
     lcd.setCursor(0,1);
     lcd.print("PM & VOCs");
+    digitalWrite(ESPLIGHTPIN, HIGH);
     delay(1000);
     lcd.clear();
+    digitalWrite(ESPLIGHTPIN, LOW);
     delay(1000);
   }
   lcd.clear();
 }
 void loop(){
-  now_time = millis();
   if (digitalRead(LIGHTPIN) == HIGH ) {
     lcd.backlight();
   } else {
-    lcd.nobacklight();
+    lcd.noBacklight();
   }
   while (mySerial.available()) {
     CopeSerialData(mySerial.read());
   }
   if (cycle == 0) {
     cycle = 1;
+    digitalWrite(ESPLIGHTPIN, HIGH);
   }
     else {
       cycle = 0;
+      digitalWrite(ESPLIGHTPIN, LOW);
     } 
-  delay(3000);  // rescreen LCD every 3 sec, but upload to ThinkSpeak is 5 min.
-}
+  delay(1000);  // rescreen LCD every 1 sec, but upload to ThinkSpeak is 30 min.
+  now_time = millis();
+  }
