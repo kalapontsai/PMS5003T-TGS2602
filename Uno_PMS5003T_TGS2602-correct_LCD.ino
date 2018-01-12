@@ -9,7 +9,7 @@ int cycle = 0; // to switch LCD screen to show PM2.5 or VOCs
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // declare LCD I2C address
 int LIGHTPIN = 5; //use D5 for LCD backlight switch
 
-unsigned long now_time; // control upload data timing to ThinkSpeak
+unsigned long now_time; // control upload data timing
 unsigned long o_time;
 
 float tempRHLow =0;
@@ -90,10 +90,6 @@ char CopeSerialData(unsigned char ucData){
     pmcount25=(float)ucRxBuffer[22]*256+(float)ucRxBuffer[23];  Serial.print("PMcount2.5:");Serial.println(pmcount25);
     temp=(float)ucRxBuffer[24]*256+(float)ucRxBuffer[25];       Serial.print("Temperature:");Serial.println(temp/10);
     humi=(float)ucRxBuffer[26]*256+(float)ucRxBuffer[27];       Serial.print("Humidity:");   Serial.println(humi/10);
-    if (((temp/10) > 50) || ((temp/10) < 1) ) {
-          ucRxCnt=0;
-    return ucRxCnt;
-    }
     //Serial.print("Version:");     Serial.println((float)ucRxBuffer[28]);
     //Serial.print("Error Code:");  Serial.println((float)ucRxBuffer[29]);
     //Serial.println("------------------------------------------------------");
@@ -135,7 +131,11 @@ char CopeSerialData(unsigned char ucData){
     Serial.print(" / ");
     Serial.println(o_time);
     Serial.println("------------------------------------------------------");
-    if ((now_time - o_time) > 1800000) {
+    if ((temp/10) > 50){
+      o_time += 5000;
+    } // if measure value is abnormal, delay 5 sec to send data
+
+    if ((now_time - o_time) > 300000) {
       espSend(temp,humi,pmat25,pmat100,gasval);
       o_time = now_time;
     }
@@ -180,6 +180,6 @@ void loop(){
       cycle = 0;
       digitalWrite(ESPLIGHTPIN, LOW);
     } 
-  delay(1000);  // rescreen LCD every 1 sec, but upload to ThinkSpeak is 30 min.
+  delay(1000);  // rescreen LCD every 1 sec, but upload to ThinkSpeak is 5 min.
   now_time = millis();
   }
