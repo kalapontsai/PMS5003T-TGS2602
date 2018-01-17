@@ -7,7 +7,7 @@ int gasval = 0;
 int cycle = 0; // to switch LCD screen to show PM2.5 or VOCs
 
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // declare LCD I2C address
-int LIGHTPIN = 5; //use D5 for LCD backlight switch
+int LIGHTPIN = 2; //use A2 for LCD backlight switch
 
 unsigned long now_time; // control upload data timing
 unsigned long o_time;
@@ -147,14 +147,13 @@ char CopeSerialData(unsigned char ucData){
 void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);
-  pinMode(LIGHTPIN,INPUT);
   pinMode(ESPLIGHTPIN,OUTPUT);
   lcd.begin(16, 2); // LCD initial，16 words x 2 column，backlight ON
   for(int i=0; i<3; i++) {  // shall be wait for 30 sec since internal fan power on
     lcd.setCursor(0,0);
     lcd.print("Humi & Temp");
     lcd.setCursor(0,1);
-    lcd.print("PM & VOCs");
+    lcd.print("PM & VOCs v0116"); // add revision
     digitalWrite(ESPLIGHTPIN, HIGH);
     delay(1000);
     lcd.clear();
@@ -164,7 +163,7 @@ void setup() {
   lcd.clear();
 }
 void loop(){
-  if (digitalRead(LIGHTPIN) == HIGH ) {
+  if (analogRead(LIGHTPIN)> 800 ) {  // use analog value to avoide digital signal unstable when switch off
     lcd.backlight();
   } else {
     lcd.noBacklight();
